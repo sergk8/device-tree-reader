@@ -8,14 +8,18 @@
 
 #include "fdt.h"
 
+
+//#define PRINT_STRINGS
+#define PRINT_NODE
+struct fdt fdt;
+
 int main() {
 		char *dtb_file = "/usr/local/share/dtb/arm64/rockchip/rk3399-pinebook-pro.dtb";
 
-		uint32_t *addr, c = 0;
+		uint32_t *addr, c = 0, *ptr;
 		int fd;
 		struct stat sb;
 
-		struct fdt fdt;
 		struct fdt_head *header;
 
 		printf("opening dtb file\n");
@@ -50,19 +54,17 @@ int main() {
 		}
 
 //		printf("%x\n", fdt->header);
-		printf("magic: %x\n", htobe32(fdt.header->fh_magic));
+		printf("magic: 0x%x\n", htobe32(fdt.header->fh_magic));
 		printf("version: %x\n", htobe32(fdt.header->fh_version));
-		printf("strings_size: %x\n", htobe32(fdt.strings_size));
+		printf("strings_size: %d\n", htobe32(fdt.strings_size));
 
 		printf("\nDumping tree:\n\n");
 
-
+#ifdef PRINT_STRINGS
 		printf("Printing all strings:\n");
 		for (c = 0; c <= fdt.strings_size; c += sizeof(char)) {
 			char x = *(fdt.strings + c);
-
 			if ( c== 0 || *(fdt.strings + c - sizeof(char)) == '\0') {
-
 				printf("%d: ", c);
 			}
 
@@ -71,8 +73,39 @@ int main() {
 			} else {
 				printf("%c", (x));
 			}
-			//printf("%x", htobe32(*(addr+c)));
 		}
+#endif
+
+#ifdef PRINT_NODE
+		ptr = (uint64_t *)fdt.tree;
+		for (c = 0; c <= 256; c += sizeof(char)) {
+			char elem = *((char *)ptr + c);	
+			printf("[0x%x] fdt.tree+%d: %c (%x)", (char *)ptr + c, c, elem, elem);
+			switch (elem) {
+					case FDT_NODE_BEGIN:
+						printf(" <== FDT_NODE_BEGIN");
+						break;
+					case FDT_NODE_END:
+						printf(" <== FDT_NODE_END");
+						break;
+					case FDT_PROPERTY:
+						printf(" <== FDT_PROPERTY");
+						break;
+					case FDT_NOP:
+						printf(" <== FDT_NOP");
+						break;
+					case FDT_END:
+						printf(" <== FDT_END");
+						break;
+					default:
+						break;
+			}
+			printf("\n");
+		}
+
+		printf("\n\n//fdt.tree=0x%x\n", fdt.tree);
+		fdt_print_node(ptr, 0);
+#endif
 		return 1;
 }
 
