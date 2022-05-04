@@ -8,19 +8,69 @@
 
 #include "fdt.h"
 
+#define DEFAULT_DTB_FILE "/usr/local/share/dtb/arm64/rockchip/rk3399-pinebook-pro.dtb";
 
 //#define PRINT_STRINGS
 //#define PRINT_NODE_DUMP
 struct fdt fdt;
 
-int main() {
-		char *dtb_file = "/usr/local/share/dtb/arm64/rockchip/rk3399-pinebook-pro.dtb";
 
+/* flags */
+int f_strings;
+int f_dump;
+int f_tree;
+int f_tree_default;
+
+
+void
+usage() {
+		printf("Usage: %s <option(s)> <file>\n", "./main");
+		printf("One of the following switches can be given:\n");
+		printf("\
+\t-s	Display strings (and their offsets) from dtb  file\n\
+\t-d	Display dump of dtb file\n\
+\t-t	Display FDT tree (default behaviour)\n\
+");
+}
+
+int
+main(int argc, char *argv[]) {
+		char *dtb_file;
 		uint32_t *addr, c = 0, *ptr;
 		int fd;
 		struct stat sb;
 
 		struct fdt_head *header;
+
+		int ch;
+
+
+		f_tree_default = 1;
+		while((ch = getopt(argc, argv, "sdt")) != -1) {
+			switch(ch) {
+					case 's':
+							f_strings = 1;
+							f_tree_default = 0;
+							break;
+					case 'd':
+							f_dump = 1;
+							f_tree_default = 0;
+							break;
+					case 't':
+							f_tree = 1;
+					default:
+							break;
+			}
+		}
+		argc -= optind;
+		argv += optind;
+
+		if (argc < 1) {
+				usage();
+				return 0;
+		}
+
+		dtb_file = argv[--argc];
 
 		printf("opening dtb file\n");
 
@@ -60,52 +110,55 @@ int main() {
 
 		printf("\nDumping tree:\n\n");
 
-#ifdef PRINT_STRINGS
-		printf("Printing all strings:\n");
-		for (c = 0; c <= fdt.strings_size; c += sizeof(char)) {
-			char x = *(fdt.strings + c);
-			if ( c== 0 || *(fdt.strings + c - sizeof(char)) == '\0') {
-				printf("%d: ", c);
-			}
+		if (f_strings == 1) {
+			printf("Printing all strings:\n");
+			for (c = 0; c <= fdt.strings_size; c += sizeof(char)) {
+				char x = *(fdt.strings + c);
+				if ( c== 0 || *(fdt.strings + c - sizeof(char)) == '\0') {
+					printf("%d: ", c);
+				}
 
-			if (x == '\0') {
-				printf("\n");
-			} else {
-				printf("%c", (x));
+				if (x == '\0') {
+					printf("\n");
+				} else {
+					printf("%c", (x));
+				}
 			}
 		}
-#endif
 
 		ptr = (uint64_t *)fdt.tree;
-#ifdef PRINT_NODE_DUMP
-		for (c = 0; c <= 256; c += sizeof(char)) {
-			char elem = *((char *)ptr + c);	
-			printf("[0x%x] fdt.tree+%d: %c (%d)", (char *)ptr + c, c, elem, elem);
-			switch (elem) {
-					case FDT_NODE_BEGIN:
-						printf(" <== FDT_NODE_BEGIN");
-						break;
-					case FDT_NODE_END:
-						printf(" <== FDT_NODE_END");
-						break;
-					case FDT_PROPERTY:
-						printf(" <== FDT_PROPERTY");
-						break;
-					case FDT_NOP:
-						printf(" <== FDT_NOP");
-						break;
-					case FDT_END:
-						printf(" <== FDT_END");
-						break;
-					default:
-						break;
+		if (f_dump == 1) { 
+			for (c = 0; c <= 256; c += sizeof(char)) {
+				char elem = *((char *)ptr + c);	
+				printf("[0x%x] fdt.tree+%d: %c (%d)", (char *)ptr + c, c, elem, elem);
+				switch (elem) {
+						case FDT_NODE_BEGIN:
+							printf(" <== FDT_NODE_BEGIN");
+							break;
+						case FDT_NODE_END:
+							printf(" <== FDT_NODE_END");
+							break;
+						case FDT_PROPERTY:
+							printf(" <== FDT_PROPERTY");
+							break;
+						case FDT_NOP:
+							printf(" <== FDT_NOP");
+							break;
+						case FDT_END:
+							printf(" <== FDT_END");
+							break;
+						default:
+							break;
+				}
+				printf("\n");
 			}
-			printf("\n");
+
+			//printf("\n\n//fdt.tree=0x%x\n", fdt.tree);
 		}
 
-		printf("\n\n//fdt.tree=0x%x\n", fdt.tree);
-#endif
-		fdt_print_node_recurse(ptr, 0);
+		if (f_tree == 1 || f_tree_default == 1) {
+			fdt_print_node_recurse(ptr, 0);
+		}
 		return 1;
 }
 
