@@ -69,7 +69,7 @@ int	 fdt_node_is_compatible(void *, const char *);
 #ifdef DEBUG
 void	*fdt_print_property(void *, int);
 void	 fdt_print_tree(void);
-#endif
 void 	 fdt_print_node(void *, int);
+#endif
 void 	 fdt_print_node_recurse(void *, int);
 

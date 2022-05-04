@@ -16,13 +16,13 @@ struct fdt fdt;
 
 
 /* flags */
-int f_strings;
-int f_dump;
-int f_tree;
-int f_tree_default;
+static int f_strings;
+static int f_dump;
+static int f_tree;
+static int f_tree_default;
 
 
-void
+static void
 usage() {
 		printf("Usage: %s <option(s)> <file>\n", "./main");
 		printf("One of the following switches can be given:\n");
@@ -33,7 +33,7 @@ usage() {
 ");
 }
 
-void
+static void
 show_strings() {
 		uint32_t c;
 
@@ -52,7 +52,7 @@ show_strings() {
 		}
 }
 
-void
+static void
 show_dump(uint32_t *ptr) {
 		uint32_t c;
 
@@ -108,6 +108,7 @@ main(int argc, char *argv[]) {
 							break;
 					case 't':
 							f_tree = 1;
+							break;
 					default:
 							break;
 			}
