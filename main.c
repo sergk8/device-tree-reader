@@ -44,7 +44,7 @@ int main() {
 
 
 		printf("reading bytes: \n");
-		for (c=0;c<=sb.st_size;c+=sizeof(uint32_t)) {
+		for (c = 0; c <= sb.st_size; c += sizeof(uint32_t)) {
 			//printf("%d: %x\n", c, htobe32(*(addr+c)));
 			//printf("%x", htobe32(*(addr+c)));
 		}
@@ -52,10 +52,20 @@ int main() {
 //		printf("%x\n", fdt->header);
 		printf("magic: %x\n", htobe32(fdt.header->fh_magic));
 		printf("version: %x\n", htobe32(fdt.header->fh_version));
+		printf("strings_size: %x\n", htobe32(fdt.strings_size));
+
+		printf("\nDumping tree:\n\n");
 
 
-		for (c=0;c<=fdt.strings_size;c+=sizeof(char)) {
+		printf("Printing all strings:\n");
+		for (c = 0; c <= fdt.strings_size; c += sizeof(char)) {
 			char x = *(fdt.strings + c);
+
+			if ( c== 0 || *(fdt.strings + c - sizeof(char)) == '\0') {
+
+				printf("%d: ", c);
+			}
+
 			if (x == '\0') {
 				printf("\n");
 			} else {
