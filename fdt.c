@@ -113,6 +113,34 @@ skip_node(void *node)
 
 	return (ptr + 1);
 }
+
+
+/*
+ * Retrieves next node, skipping all the children nodes of the pointed node
+ */
+void *
+fdt_child_node(void *node)
+{
+	uint32_t *ptr;
+
+#ifdef DEBUG
+	printf("//fdt.c:fdt_child_node:\n");
+#endif
+//	if (!tree_inited)
+//		return NULL;
+
+	ptr = node;
+
+	if (betoh32(*ptr) != FDT_NODE_BEGIN)
+		return NULL;
+
+	ptr++;
+
+	ptr = skip_node_name(ptr);
+	ptr = skip_props(ptr);
+	/* check if there is a child node */
+	return (betoh32(*ptr) == FDT_NODE_BEGIN) ? (ptr) : NULL;
+}
 	 	
 /*
  * Retrieves next node, skipping all the children nodes of the pointed node,
@@ -238,3 +266,15 @@ fdt_print_node(void *node, int level)
 		ptr = fdt_print_property(ptr, level);
 }
 
+void
+fdt_print_node_recurse(void *node, int level)
+{
+	void *child;
+#ifdef DEBUG
+	printf("//fdt.c:fdt_print_node_recurse:\n");
+#endif
+
+	fdt_print_node(node, level);
+	for (child = fdt_child_node(node); child; child = fdt_next_node(child))
+		fdt_print_node_recurse(child, level + 1);
+}

@@ -71,4 +71,5 @@ void	*fdt_print_property(void *, int);
 void	 fdt_print_tree(void);
 #endif
 void 	 fdt_print_node(void *, int);
+void 	 fdt_print_node_recurse(void *, int);
 
