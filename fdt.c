@@ -11,7 +11,7 @@
 
 extern struct fdt fdt;
 
-#define DEBUG
+//#define DEBUG
 
 /*
  * Retrieve string pointer from strings table.
@@ -225,7 +225,15 @@ fdt_print_property(void *node, int level)
 	    !strcmp(tmp, "model") || !strcmp(tmp, "bootargs") ||
 	    !strcmp(tmp, "linux,stdout-path")) {
 		printf("%s", value);
-	} else if (!strcmp(tmp, "stdout-path")) {
+	} else if (!strcmp(tmp, "stdout-path") || !strcmp(tmp, "pinctrl-names") ||
+		!strcmp(tmp, "regulator-name") || !strcmp(tmp, "charger-type") ||
+		!strcmp(tmp, "label") || !strcmp(tmp, "function") ||
+		!strcmp(tmp, "clock-names") || !strcmp(tmp, "reset-names") ||
+		!strcmp(tmp, "status") ||
+		!strcmp(tmp, "enable-method") || !strcmp(tmp, "method") ||
+		!strncmp(tmp, "phy", 3) || !strcmp(tmp, "interrupt-names") ||
+		!strncmp(tmp, "ethernet", 8) || !strncmp(tmp, "serial", 6) ||
+		!strncmp(tmp, "i2c", 3) || !strncmp(tmp, "mmc", 3)) {
 		printf("%s", value);
 	} else if (!strcmp(tmp, "clock-frequency") ||
 	    !strcmp(tmp, "timebase-frequency")) {

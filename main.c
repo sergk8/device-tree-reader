@@ -9,8 +9,8 @@
 #include "fdt.h"
 
 
-#define PRINT_STRINGS
-#define PRINT_NODE
+//#define PRINT_STRINGS
+//#define PRINT_NODE_DUMP
 struct fdt fdt;
 
 int main() {
@@ -76,8 +76,8 @@ int main() {
 		}
 #endif
 
-#ifdef PRINT_NODE
 		ptr = (uint64_t *)fdt.tree;
+#ifdef PRINT_NODE_DUMP
 		for (c = 0; c <= 256; c += sizeof(char)) {
 			char elem = *((char *)ptr + c);	
 			printf("[0x%x] fdt.tree+%d: %c (%d)", (char *)ptr + c, c, elem, elem);
@@ -104,8 +104,8 @@ int main() {
 		}
 
 		printf("\n\n//fdt.tree=0x%x\n", fdt.tree);
-		fdt_print_node_recurse(ptr, 0);
 #endif
+		fdt_print_node_recurse(ptr, 0);
 		return 1;
 }
 
