@@ -33,6 +33,56 @@ usage() {
 ");
 }
 
+void
+show_strings() {
+		uint32_t c;
+
+		printf("Printing all strings:\n");
+		for (c = 0; c <= fdt.strings_size; c += sizeof(char)) {
+			char x = *(fdt.strings + c);
+			if ( c== 0 || *(fdt.strings + c - sizeof(char)) == '\0') {
+				printf("%d: ", c);
+			}
+
+			if (x == '\0') {
+				printf("\n");
+			} else {
+				printf("%c", (x));
+			}
+		}
+}
+
+void
+show_dump(uint32_t *ptr) {
+		uint32_t c;
+
+		for (c = 0; c <= 256; c += sizeof(char)) {
+			char elem = *((char *)ptr + c);
+			printf("[0x%x] fdt.tree+%d: %c (%d)", (char *)ptr + c, c, elem, elem);
+			switch (elem) {
+					case FDT_NODE_BEGIN:
+						printf(" <== FDT_NODE_BEGIN");
+						break;
+					case FDT_NODE_END:
+						printf(" <== FDT_NODE_END");
+						break;
+					case FDT_PROPERTY:
+						printf(" <== FDT_PROPERTY");
+						break;
+					case FDT_NOP:
+						printf(" <== FDT_NOP");
+						break;
+					case FDT_END:
+						printf(" <== FDT_END");
+						break;
+					default:
+						break;
+			}
+			printf("\n");
+		}
+		//printf("\n\n//fdt.tree=0x%x\n", fdt.tree);
+}
+
 int
 main(int argc, char *argv[]) {
 		char *dtb_file;
@@ -111,49 +161,12 @@ main(int argc, char *argv[]) {
 		printf("\nDumping tree:\n\n");
 
 		if (f_strings == 1) {
-			printf("Printing all strings:\n");
-			for (c = 0; c <= fdt.strings_size; c += sizeof(char)) {
-				char x = *(fdt.strings + c);
-				if ( c== 0 || *(fdt.strings + c - sizeof(char)) == '\0') {
-					printf("%d: ", c);
-				}
-
-				if (x == '\0') {
-					printf("\n");
-				} else {
-					printf("%c", (x));
-				}
-			}
+				show_strings();
 		}
 
 		ptr = (uint64_t *)fdt.tree;
 		if (f_dump == 1) { 
-			for (c = 0; c <= 256; c += sizeof(char)) {
-				char elem = *((char *)ptr + c);	
-				printf("[0x%x] fdt.tree+%d: %c (%d)", (char *)ptr + c, c, elem, elem);
-				switch (elem) {
-						case FDT_NODE_BEGIN:
-							printf(" <== FDT_NODE_BEGIN");
-							break;
-						case FDT_NODE_END:
-							printf(" <== FDT_NODE_END");
-							break;
-						case FDT_PROPERTY:
-							printf(" <== FDT_PROPERTY");
-							break;
-						case FDT_NOP:
-							printf(" <== FDT_NOP");
-							break;
-						case FDT_END:
-							printf(" <== FDT_END");
-							break;
-						default:
-							break;
-				}
-				printf("\n");
-			}
-
-			//printf("\n\n//fdt.tree=0x%x\n", fdt.tree);
+				show_dump(ptr);
 		}
 
 		if (f_tree == 1 || f_tree_default == 1) {
