@@ -225,6 +225,8 @@ fdt_print_property(void *node, int level)
 	    !strcmp(tmp, "model") || !strcmp(tmp, "bootargs") ||
 	    !strcmp(tmp, "linux,stdout-path")) {
 		printf("%s", value);
+	} else if (!strcmp(tmp, "stdout-path")) {
+		printf("%s", value);
 	} else if (!strcmp(tmp, "clock-frequency") ||
 	    !strcmp(tmp, "timebase-frequency")) {
 		printf("%d", betoh32(*((unsigned int *)value)));
