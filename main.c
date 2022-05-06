@@ -22,6 +22,27 @@ static int f_tree;
 static int f_tree_default;
 
 
+static void *
+find_fdt_signature(void * const mem, int size) {
+	char * ptr;
+	int offset = 0;
+
+	ptr = (char *) mem;
+
+	printf("find_fdt_signature\n");
+
+	while (!(*(ptr + 0) == 0xd0 && *(ptr + 1) == 0x0d && *(ptr + 2) == 0xfe && *(ptr + 3) == 0xed)) {
+		offset++;
+		if (offset > size - 5)
+			break;
+		ptr++;
+	}
+	printf("Found FDT_MAGIC at offset: %d\n", offset);
+
+	return (void *)ptr;
+}
+
+
 static void
 usage() {
 		printf("Usage: %s <option(s)> <file>\n", "./main");
@@ -86,7 +107,7 @@ show_dump(uint32_t *ptr) {
 int
 main(int argc, char *argv[]) {
 		char *dtb_file;
-		uint32_t *addr, c = 0, *ptr;
+		uint32_t *addr, c = 0, *ptr, *fdt_ptr;
 		int fd;
 		struct stat sb;
 
@@ -139,13 +160,16 @@ main(int argc, char *argv[]) {
 			return 0;
 		}
 
+		fdt_ptr = find_fdt_signature(addr, sb.st_size);
+
 		//fdt = (struct fdt*)addr;
-		fdt.header = (struct fdt_head*)addr;
-		fdt.tree = (char *)addr + htobe32(fdt.header->fh_struct_off);
-		fdt.strings = (char *)addr + htobe32(fdt.header->fh_strings_off);
-		fdt.memory = (char *)addr + htobe32(fdt.header->fh_reserve_off);
-		fdt.end = (char *)addr + htobe32(fdt.header->fh_size);
+		fdt.header = (struct fdt_head*)fdt_ptr;
+		fdt.tree = (char *)fdt_ptr + htobe32(fdt.header->fh_struct_off);
+		fdt.strings = (char *)fdt_ptr + htobe32(fdt.header->fh_strings_off);
+		fdt.memory = (char *)fdt_ptr + htobe32(fdt.header->fh_reserve_off);
+		fdt.end = (char *)fdt_ptr + htobe32(fdt.header->fh_size);
 		fdt.strings_size = htobe32(fdt.header->fh_strings_size);
+		fdt.struct_size = htobe32(fdt.header->fh_struct_size);
 
 
 		printf("reading bytes: \n");
@@ -157,7 +181,8 @@ main(int argc, char *argv[]) {
 //		printf("%x\n", fdt->header);
 		printf("magic: 0x%x\n", htobe32(fdt.header->fh_magic));
 		printf("version: %x\n", htobe32(fdt.header->fh_version));
-		printf("strings_size: %d\n", htobe32(fdt.strings_size));
+		printf("strings_size: %d\n", fdt.strings_size);
+		printf("struct_size: %d\n", fdt.struct_size);
 
 		printf("\nDumping tree:\n\n");
 
