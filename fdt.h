@@ -1,3 +1,4 @@
+/*	$skp-tools: fdt.h,v 1.1 2022/05/08 22:42:45 skp Exp $	*/
 /*	$OpenBSD: fdt.h,v 1.3 2017/08/23 18:03:54 kettenis Exp $	*/
 
 /*
