@@ -10,6 +10,7 @@
 
 #define DEFAULT_DTB_FILE "/usr/local/share/dtb/arm64/rockchip/rk3399-pinebook-pro.dtb";
 
+//#define DEBUG
 //#define PRINT_STRINGS
 //#define PRINT_NODE_DUMP
 struct fdt fdt;
@@ -22,24 +23,28 @@ static int f_tree;
 static int f_tree_default;
 
 
-static void *
-find_fdt_signature(void * const mem, int size) {
+static int
+find_fdt_signature(void * const mem, int size, const void ** fdt_ptr) {
 	char * ptr;
 	int offset = 0;
 
 	ptr = (char *) mem;
 
+#ifdef DEBUG
 	printf("find_fdt_signature\n");
+#endif
 
 	while (!(*(ptr + 0) == 0xd0 && *(ptr + 1) == 0x0d && *(ptr + 2) == 0xfe && *(ptr + 3) == 0xed)) {
 		offset++;
-		if (offset > size - 5)
-			break;
+		if (offset > size - 5) {
+			return -1;
+		}
 		ptr++;
 	}
 	printf("Found FDT_MAGIC at offset: %d\n", offset);
 
-	return (void *)ptr;
+	*fdt_ptr = (void *)ptr;
+	return 1;
 }
 
 
@@ -144,7 +149,7 @@ main(int argc, char *argv[]) {
 
 		dtb_file = argv[--argc];
 
-		printf("opening dtb file\n");
+		printf("opening dtb file: %s\n", dtb_file);
 
 		fd = open(dtb_file, O_RDONLY);
 		if (fd < 0 || fstat(fd, &sb) == -1) {
@@ -160,7 +165,10 @@ main(int argc, char *argv[]) {
 			return 0;
 		}
 
-		fdt_ptr = find_fdt_signature(addr, sb.st_size);
+		if (find_fdt_signature(addr, sb.st_size, &fdt_ptr) < 0) {
+			printf("Could not find FDT_MAGIC\n");
+			return 0;
+		}
 
 		//fdt = (struct fdt*)addr;
 		fdt.header = (struct fdt_head*)fdt_ptr;
@@ -172,31 +180,33 @@ main(int argc, char *argv[]) {
 		fdt.struct_size = htobe32(fdt.header->fh_struct_size);
 
 
-		printf("reading bytes: \n");
-		for (c = 0; c <= sb.st_size; c += sizeof(uint32_t)) {
+//		printf("reading bytes: \n");
+//		for (c = 0; c <= sb.st_size; c += sizeof(uint32_t)) {
 			//printf("%d: %x\n", c, htobe32(*(addr+c)));
 			//printf("%x", htobe32(*(addr+c)));
-		}
+//		}
 
 //		printf("%x\n", fdt->header);
-		printf("magic: 0x%x\n", htobe32(fdt.header->fh_magic));
+//		printf("magic: 0x%x\n", htobe32(fdt.header->fh_magic));
 		printf("version: %x\n", htobe32(fdt.header->fh_version));
 		printf("strings_size: %d\n", fdt.strings_size);
 		printf("struct_size: %d\n", fdt.struct_size);
 
-		printf("\nDumping tree:\n\n");
 
 		if (f_strings == 1) {
+				printf("\nDumping strings:\n\n");
 				show_strings();
 		}
 
 		ptr = (uint64_t *)fdt.tree;
 		if (f_dump == 1) { 
+				printf("\nDumping binary:\n\n");
 				show_dump(ptr);
 		}
 
 		if (f_tree == 1 || f_tree_default == 1) {
-			fdt_print_node_recurse(ptr, 0);
+				printf("\nDumping tree:\n\n");
+				fdt_print_node_recurse(ptr, 0);
 		}
 		return 1;
 }
